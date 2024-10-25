@@ -37,6 +37,9 @@ class LeccapDownloader:
             Path(__file__).parent / "downloads" / self.fuzzy_course
         )
 
+    def close(self) -> None:
+        self.driver.close()
+
     def go(self) -> None:
         course_link = self.find_course_link()
         if not course_link:
@@ -169,9 +172,7 @@ class LeccapDownloader:
             with open(parent / subtitle_filename, "w") as f:
                 f.write(res)
 
-        while True:
-            sleep(10)
-
 
 downloader = LeccapDownloader(course_name)
 downloader.go()
+downloader.close()
