@@ -24,3 +24,7 @@ A Selenium-controlled browser window will appear. You will need to log into your
 All the source code is plainly visible in [main.py](./main.py). Please feel free to read through it closely if you are wary of entering your login info.
 
 Your cookies and other data will be stored in the `./chrome-data/` directory for subsequent runs. If you are done with the program for a while, consider deleting this directory when you are done, so that your credentials aren't stored.
+
+## License
+
+Licensed under the GNU Affero General Public License, version 3.0. See [LICENSE](./LICENSE).
