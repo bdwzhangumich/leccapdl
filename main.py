@@ -2,6 +2,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from typing import Optional  
 from time import sleep
 from tqdm import tqdm
 import json
@@ -55,7 +56,7 @@ class LeccapDownloader:
         ):
             sleep(1.0)
 
-    def find_course_link(self) -> WebElement | None:
+    def find_course_link(self) -> Optional[WebElement]:  
         print("[i] Searching for course...")
         self.goto_home()
         by_year_link = self.driver.find_element(
