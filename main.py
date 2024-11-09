@@ -2,7 +2,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from typing import Optional  
+from typing import Optional
 from time import sleep
 from tqdm import tqdm
 import json
@@ -25,7 +25,7 @@ print(f"[i] Course files will be saved under '{course_name}'")
 
 class LeccapDownloader:
     fuzzy_course: str
-    driver: webdriver.ChromiumEdge
+    driver: webdriver.Chrome
     download_path: Path
 
     def __init__(self, course_name: str) -> None:
@@ -56,7 +56,7 @@ class LeccapDownloader:
         ):
             sleep(1.0)
 
-    def find_course_link(self) -> Optional[WebElement]:  
+    def find_course_link(self) -> Optional[WebElement]:
         print("[i] Searching for course...")
         self.goto_home()
         by_year_link = self.driver.find_element(
