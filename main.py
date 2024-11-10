@@ -110,6 +110,7 @@ class LeccapDownloader:
         jsons = []
         for btn in tqdm(play_buttons, desc="Download JSON", leave=False):
             href = btn.get_attribute("href")
+            assert href
             slug = href.split("/")[-1]
             res = self.driver.execute_async_script(
                 f"""
