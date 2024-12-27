@@ -20,7 +20,7 @@ def create_filename(s: str) -> str:
 
 course_name = input("[?] Enter course name (e.g. EECS 281) > ")
 course_name = fuzzy(course_name)
-print(f"[i] Course files will be saved under '{course_name}'")
+print(f"[i] Course files will be saved under 'downloads/json and downloads/videos'")
 
 
 class LeccapDownloader:
@@ -35,7 +35,7 @@ class LeccapDownloader:
         self.driver = webdriver.Chrome(options=chrome_options)
 
         self.download_path = (
-            Path(__file__).parent / "downloads" / self.fuzzy_course
+            Path(__file__).parent / "downloads"
         )
 
     def close(self) -> None:
