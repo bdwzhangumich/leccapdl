@@ -44,11 +44,15 @@ class LeccapDownloader:
         self.driver.close()
 
     def go(self) -> None:
-        course_link = self.find_course_link()
-        if not course_link:
+        course_links = self.find_course_links()
+        if not course_links:
             print("[!] Could not find course! Check your search term.")
             return
-        self.download_course_link(course_link)
+        
+        assert len(course_links) > 0 and len(course_links) <= 2
+        self.download_course_link(course_links[0], True)
+        if len(course_links) == 2:
+            self.download_course_link(course_links[1], False)
 
     def goto_home(self) -> None:
         self.driver.get("https://leccap.engin.umich.edu/leccap/")
@@ -58,7 +62,7 @@ class LeccapDownloader:
         ):
             sleep(1.0)
 
-    def find_course_link(self) -> Optional[WebElement]:
+    def find_course_links(self) -> Optional[list[WebElement]]:
         print("[i] Searching for course...")
         self.goto_home()
         by_year_link = self.driver.find_element(
@@ -86,24 +90,10 @@ class LeccapDownloader:
                 ):
                     return None
                 prev_year_link.click()
-            elif len(matches) > 1:
-                print("[?] Multiple matches found in one year - select one:")
-                for i, m in enumerate(matches):
-                    print(f"{i+1}. {m.text}")
-                while True:
-                    n = input(f"[?] Choose 1-{len(matches)} > ")
-                    try:
-                        n = int(n)
-                        if n >= 0 and n <= len(matches):
-                            break
-                    except ValueError:
-                        pass
-                    print("[!] Please choose a valid option.")
-                return matches[n - 1]
             else:
-                return matches[0]
+                return matches
 
-    def download_course_link(self, course_link: WebElement) -> None:
+    def download_course_link(self, course_link: WebElement, lecture: bool) -> None:
         course_link.click()
         play_buttons = self.driver.find_elements(
             by=By.CSS_SELECTOR,
@@ -129,7 +119,12 @@ class LeccapDownloader:
             date = f"{date_parts[2]}-{date_parts[0]}-{date_parts[1]}"
             return create_filename(f"{date} {j['title']}")
 
-        parent = self.download_path / "json"
+        if lecture:
+            class_type_path = self.download_path / "lecture"
+        else:
+            class_type_path = self.download_path / "discussion"
+
+        parent = class_type_path / "json"
         parent.mkdir(parents=True, exist_ok=True)
         for i, j in enumerate(jsons):
             with open(
@@ -158,7 +153,7 @@ class LeccapDownloader:
                         pb.update(len(data))
                         f.write(data)
 
-        parent = self.download_path / "videos"
+        parent = class_type_path / "videos"
         parent.mkdir(parents=True, exist_ok=True)
         for i, j in enumerate(tqdm(jsons)):
             url = f"https:{j['mediaPrefix']}{j['sitekey']}/{j['info']['products'][0]['movie_exported_name']}.mp4"
