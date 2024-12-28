@@ -21,6 +21,8 @@ def create_filename(s: str) -> str:
 course_name = input("[?] Enter course name (e.g. EECS 281) > ")
 course_name = fuzzy(course_name)
 print(f"[i] Course files will be saved under 'downloads/json and downloads/videos'")
+# not gonna bother allow changing the download path since it seems like mount is needed to use external storage in wsl
+print(f"[i] Mount another directory to the downloads directory to change where the files are saved'")
 
 
 class LeccapDownloader:
