@@ -33,7 +33,8 @@ class LeccapDownloader:
     driver: webdriver.Chrome
     download_path: Path
 
-    def __init__(self, folder_name: str, course_name: str) -> None:
+    def __init__(self, folder_name: str, course_name: str, lecture: bool) -> None:
+        self.lecture = lecture # whether to download the first link or the second and which folder to put it in
         self.fuzzy_course = fuzzy(course_name)
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--user-data-dir=chrome-data")
@@ -53,9 +54,8 @@ class LeccapDownloader:
             return
         
         assert len(course_links) > 0 and len(course_links) <= 2
-        self.download_course_link(course_links[0], True)
-        if len(course_links) == 2:
-            self.download_course_link(course_links[1], False)
+        assert int(self.lecture) < len(course_links) # the discussion should only be downloaded if there is one
+        self.download_course_link(course_links[int(self.lecture)], self.lecture)
 
     def goto_home(self) -> None:
         self.driver.get("https://leccap.engin.umich.edu/leccap/")
@@ -182,6 +182,19 @@ for course in courses:
     course_name = fuzzy(course)
     print(f"[i] Course files for {course} will be saved under 'downloads/{folder_name}'")
 
-    downloader = LeccapDownloader(folder_name, course_name)
+    downloader = LeccapDownloader(folder_name, course_name, True)
+    course_links = downloader.find_course_links()
+    downloader.close()
+    assert len(course_links) > 0 and len(course_links) <= 2
+    discussion_exists = len(course_links) == 2
+    if discussion_exists:
+        print(f"[i] Discussion section for {course} has been found and will be downloaded after the lecture section")
+    
+    downloader = LeccapDownloader(folder_name, course_name, True)
     downloader.go()
     downloader.close()
+    
+    if discussion_exists:
+        downloader = LeccapDownloader(folder_name, course_name, False)
+        downloader.go()
+        downloader.close()
