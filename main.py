@@ -8,6 +8,7 @@ from tqdm import tqdm
 import json
 import re
 import requests
+import argparse
 
 
 def fuzzy(s: str) -> str:
@@ -17,12 +18,14 @@ def fuzzy(s: str) -> str:
 def create_filename(s: str) -> str:
     return re.sub(r"[^\w]+", "_", s)
 
+parser = argparse.ArgumentParser(description="Download classes listed in the input file.")
+parser.add_argument("file", help="Path to the file containing the list of classes.")
+args = parser.parse_args()
 
-course_name = input("[?] Enter course name (e.g. EECS 281) > ")
-course_name = fuzzy(course_name)
-print(f"[i] Course files will be saved under 'downloads/json and downloads/videos'")
-# not gonna bother allow changing the download path since it seems like mount is needed to use external storage in wsl
-print(f"[i] Mount another directory to the downloads directory to change where the files are saved'")
+courses = []
+with open(args.file, 'r') as file:
+    for line in file:
+        courses.append(line.strip())
 
 
 class LeccapDownloader:
@@ -30,14 +33,14 @@ class LeccapDownloader:
     driver: webdriver.Chrome
     download_path: Path
 
-    def __init__(self, course_name: str) -> None:
+    def __init__(self, folder_name: str, course_name: str) -> None:
         self.fuzzy_course = fuzzy(course_name)
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--user-data-dir=chrome-data")
         self.driver = webdriver.Chrome(options=chrome_options)
 
         self.download_path = (
-            Path(__file__).parent / "downloads"
+            Path(__file__).parent / "downloads" / folder_name
         )
 
     def close(self) -> None:
@@ -171,7 +174,14 @@ class LeccapDownloader:
             with open(parent / subtitle_filename, "w") as f:
                 f.write(res)
 
+# not gonna bother allow changing the download path since it seems like mount is needed to use external storage in wsl
+print(f"[i] Mount another directory to the downloads directory to change where the files are saved'")
 
-downloader = LeccapDownloader(course_name)
-downloader.go()
-downloader.close()
+for course in courses:
+    folder_name = "".join(course.split())
+    course_name = fuzzy(course)
+    print(f"[i] Course files for {course} will be saved under 'downloads/{folder_name}'")
+
+    downloader = LeccapDownloader(folder_name, course_name)
+    downloader.go()
+    downloader.close()
