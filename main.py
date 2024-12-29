@@ -10,28 +10,23 @@ import re
 import requests
 
 
-def fuzzy(s: str) -> str:
-    return s.replace(" ", "").lower().strip()
-
-
 def create_filename(s: str) -> str:
     return re.sub(r"[^\w]+", "_", s)
 
 
-course_name = input("[?] Enter course name (e.g. EECS 281) > ")
-course_name = fuzzy(course_name)
+# Input your course link directly here
+course_url = input("[?] Enter course URL > ")
 print(f"[i] Course files will be saved under 'downloads/json and downloads/videos'")
 # not gonna bother allow changing the download path since it seems like mount is needed to use external storage in wsl
 print(f"[i] Mount another directory to the downloads directory to change where the files are saved'")
 
 
 class LeccapDownloader:
-    fuzzy_course: str
     driver: webdriver.Chrome
     download_path: Path
 
-    def __init__(self, course_name: str) -> None:
-        self.fuzzy_course = fuzzy(course_name)
+    def __init__(self, course_url: str) -> None:
+        self.course_url = course_url
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--user-data-dir=chrome-data")
         self.driver = webdriver.Chrome(options=chrome_options)
@@ -44,67 +39,13 @@ class LeccapDownloader:
         self.driver.close()
 
     def go(self) -> None:
-        course_link = self.find_course_link()
-        if not course_link:
-            print("[!] Could not find course! Check your search term.")
-            return
-        self.download_course_link(course_link)
+        self.download_course_link(self.course_url)
 
-    def goto_home(self) -> None:
-        self.driver.get("https://leccap.engin.umich.edu/leccap/")
+    def download_course_link(self, course_url: str) -> None:
+        self.driver.get(course_url)
         sleep(1.0)
-        while not self.driver.current_url.startswith(
-            "https://leccap.engin.umich.edu"
-        ):
-            sleep(1.0)
-
-    def find_course_link(self) -> Optional[WebElement]:
-        print("[i] Searching for course...")
-        self.goto_home()
-        by_year_link = self.driver.find_element(
-            by=By.PARTIAL_LINK_TEXT, value="View courses by year"
-        )
-        by_year_link.click()
-        while True:
-            links = self.driver.find_elements(
-                by=By.CSS_SELECTOR,
-                value='a.list-group-item[href^="/leccap/site/"]',
-            )
-
-            matches = [
-                link
-                for link in links
-                if fuzzy(link.text).startswith(course_name)
-            ]
-            if not matches:
-                prev_year_link = self.driver.find_element(
-                    by=By.CSS_SELECTOR, value=".previous > a:nth-child(1)"
-                )
-                if (
-                    prev_year_link.get_attribute("href") == "#"
-                    or prev_year_link.text[-4:] <= "2015"
-                ):
-                    return None
-                prev_year_link.click()
-            elif len(matches) > 1:
-                print("[?] Multiple matches found in one year - select one:")
-                for i, m in enumerate(matches):
-                    print(f"{i+1}. {m.text}")
-                while True:
-                    n = input(f"[?] Choose 1-{len(matches)} > ")
-                    try:
-                        n = int(n)
-                        if n >= 0 and n <= len(matches):
-                            break
-                    except ValueError:
-                        pass
-                    print("[!] Please choose a valid option.")
-                return matches[n - 1]
-            else:
-                return matches[0]
-
-    def download_course_link(self, course_link: WebElement) -> None:
-        course_link.click()
+        while not course_url in self.driver.current_url:
+            sleep(1.0) # Wait for the page to load fully
         play_buttons = self.driver.find_elements(
             by=By.CSS_SELECTOR,
             value='.play-link>a.btn[href^="/leccap/player/r/"]',
@@ -137,7 +78,6 @@ class LeccapDownloader:
                 "w",
             ) as f:
                 f.write(json.dumps(j))
-                # print(j)
 
         print("[i] Downloading media. This may take a very long time...")
 
@@ -177,6 +117,6 @@ class LeccapDownloader:
                 f.write(res)
 
 
-downloader = LeccapDownloader(course_name)
+downloader = LeccapDownloader(course_url)
 downloader.go()
 downloader.close()
