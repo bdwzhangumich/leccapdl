@@ -53,9 +53,12 @@ class LeccapDownloader:
             print("[!] Could not find course! Check your search term.")
             return
         
-        assert len(course_links) > 0 and len(course_links) <= 2
-        assert int(self.lecture) < len(course_links) # the discussion should only be downloaded if there is one
-        self.download_course_link(course_links[int(self.lecture)], self.lecture)
+        if self.lecture:
+            assert len(course_links) == 1 or len(course_links) == 2
+            self.download_course_link(course_links[0], self.lecture)
+        else:
+            assert len(course_links) == 2
+            self.download_course_link(course_links[1], self.lecture)
 
     def goto_home(self) -> None:
         self.driver.get("https://leccap.engin.umich.edu/leccap/")
