@@ -186,18 +186,5 @@ for course in courses:
     print(f"[i] Course files for {course} will be saved under 'downloads/{folder_name}'")
 
     downloader = LeccapDownloader(folder_name, course_name, True)
-    course_links = downloader.find_course_links()
-    downloader.close()
-    assert len(course_links) > 0 and len(course_links) <= 2
-    discussion_exists = len(course_links) == 2
-    if discussion_exists:
-        print(f"[i] Discussion section for {course} has been found and will be downloaded after the lecture section")
-    
-    downloader = LeccapDownloader(folder_name, course_name, True)
     downloader.go()
     downloader.close()
-    
-    if discussion_exists:
-        downloader = LeccapDownloader(folder_name, course_name, False)
-        downloader.go()
-        downloader.close()
